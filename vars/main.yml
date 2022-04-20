@@ -1,0 +1,2 @@
+---
+_manictime_image: "manictime/manictimeserver:{{ manictime_server_version }}"

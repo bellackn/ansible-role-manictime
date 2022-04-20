@@ -1,0 +1,44 @@
+---
+- name: Pull ManicTime Docker image
+  community.docker.docker_image:
+    name: "{{ _manictime_image }}"
+    source: pull
+
+- name: Create data volume path
+  file:
+    path: "{{ manictime_data_path }}"
+    state: directory
+    mode: "0755"
+
+- name: Set admin user
+  command: >-
+    docker run -v {{ manictime_data_path }}:/app/Data --rm --entrypoint dotnet {{ _manictime_image }} 
+    ManicTimeServer.dll addadmin -u {{ manictime_admin_email }} -p {{ manictime_admin_password }}
+
+- name: Start ManicTime container
+  community.docker.docker_container:
+    name: "{{ manictime_container_name }}"
+    image: "{{ _manictime_image }}"
+    restart_policy: unless-stopped
+    volumes:
+      - "{{ manictime_data_path }}:/app/Data"
+    ports:
+      - "{{ manictime_port }}:8080"
+
+- name: Download ManicTime client for macOS
+  get_url:
+    url: "https://cdn.manictime.com/setup/mac/ManicTime-v{{ manictime_client_version }}.dmg"
+    dest: /tmp
+
+- name: Install ManicTime client
+  block:
+    - name: Attach .dmg
+      command: >-
+        hdiutil attach /tmp/ManicTime-v{{ manictime_client_version }}.dmg -mountpoint /private/tmp/ManicTime
+    - name: Unpack .pkg
+      command: "cp -aR /private/tmp/ManicTime/ManicTime-v{{ manictime_client_version }}.pkg /tmp"
+    - name: Install client
+      command: "installer -pkg /tmp/ManicTime-v{{ manictime_client_version }}.pkg -target /Applications/"
+      become: yes
+    - name: Detach .dmg
+      command: hdiutil detach /private/tmp/ManicTime

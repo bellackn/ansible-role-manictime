@@ -1,0 +1,12 @@
+---
+manictime_server_version: 5.0.3
+manictime_client_version: 2.1.2
+
+manictime_data_path: "{{ ansible_env.HOME }}/ManicTime"
+manictime_container_name: manictime-server
+
+manictime_admin_email: admin@admin.local
+# Must be at least 8 characters long!
+manictime_admin_password: admin123
+
+manictime_port: 8080
